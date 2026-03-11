@@ -38,7 +38,7 @@ jobs:
           pip install --upgrade pip
           pip install -r pst2pdf/requirements.txt pyinstaller
 
-      - name: Build binary
+      - name: Build CLI binary
         working-directory: pst2pdf
         run: |
           pyinstaller \
@@ -47,10 +47,23 @@ jobs:
             --paths . \
             pst2pdf.py
 
+      - name: Build GUI binary
+        working-directory: pst2pdf
+        run: |
+          pyinstaller \
+            --onefile \
+            --windowed \
+            --name pst2pdf-gui-linux-x86_64 \
+            --paths . \
+            --collect-data customtkinter \
+            gui.py
+
       - uses: actions/upload-artifact@v4
         with:
           name: pst2pdf-linux-x86_64
-          path: pst2pdf/dist/pst2pdf-linux-x86_64
+          path: |
+            pst2pdf/dist/pst2pdf-linux-x86_64
+            pst2pdf/dist/pst2pdf-gui-linux-x86_64
           if-no-files-found: error
 
   # ── Windows ──────────────────────────────────────────────────────────────
@@ -70,7 +83,7 @@ jobs:
           pip install --upgrade pip
           pip install -r pst2pdf/requirements.txt pyinstaller
 
-      - name: Build binary
+      - name: Build CLI binary
         working-directory: pst2pdf
         run: |
           pyinstaller `
@@ -79,10 +92,23 @@ jobs:
             --paths . `
             pst2pdf.py
 
+      - name: Build GUI binary
+        working-directory: pst2pdf
+        run: |
+          pyinstaller `
+            --onefile `
+            --windowed `
+            --name pst2pdf-gui-windows-x86_64 `
+            --paths . `
+            --collect-data customtkinter `
+            gui.py
+
       - uses: actions/upload-artifact@v4
         with:
           name: pst2pdf-windows-x86_64
-          path: pst2pdf/dist/pst2pdf-windows-x86_64.exe
+          path: |
+            pst2pdf/dist/pst2pdf-windows-x86_64.exe
+            pst2pdf/dist/pst2pdf-gui-windows-x86_64.exe
           if-no-files-found: error
 
   # ── macOS ────────────────────────────────────────────────────────────────
@@ -105,7 +131,7 @@ jobs:
           pip install --upgrade pip
           pip install -r pst2pdf/requirements.txt pyinstaller
 
-      - name: Build arm64 binary
+      - name: Build CLI arm64 binary
         working-directory: pst2pdf
         run: |
           pyinstaller \
@@ -115,7 +141,7 @@ jobs:
             --target-arch arm64 \
             pst2pdf.py
 
-      - name: Build x86_64 binary
+      - name: Build CLI x86_64 binary
         working-directory: pst2pdf
         run: |
           pyinstaller \
@@ -125,12 +151,43 @@ jobs:
             --target-arch x86_64 \
             pst2pdf.py
 
-      - name: Create universal binary with lipo
+      - name: Create CLI universal binary with lipo
         working-directory: pst2pdf/dist
         run: |
           lipo -create -output pst2pdf-macos-universal \
             pst2pdf-macos-arm64 \
             pst2pdf-macos-x86_64
+
+      - name: Build GUI arm64 binary
+        working-directory: pst2pdf
+        run: |
+          pyinstaller \
+            --onefile \
+            --windowed \
+            --name pst2pdf-gui-macos-arm64 \
+            --paths . \
+            --collect-data customtkinter \
+            --target-arch arm64 \
+            gui.py
+
+      - name: Build GUI x86_64 binary
+        working-directory: pst2pdf
+        run: |
+          pyinstaller \
+            --onefile \
+            --windowed \
+            --name pst2pdf-gui-macos-x86_64 \
+            --paths . \
+            --collect-data customtkinter \
+            --target-arch x86_64 \
+            gui.py
+
+      - name: Create GUI universal binary with lipo
+        working-directory: pst2pdf/dist
+        run: |
+          lipo -create -output pst2pdf-gui-macos-universal \
+            pst2pdf-gui-macos-arm64 \
+            pst2pdf-gui-macos-x86_64
 
       - uses: actions/upload-artifact@v4
         with:
@@ -139,6 +196,9 @@ jobs:
             pst2pdf/dist/pst2pdf-macos-arm64
             pst2pdf/dist/pst2pdf-macos-x86_64
             pst2pdf/dist/pst2pdf-macos-universal
+            pst2pdf/dist/pst2pdf-gui-macos-arm64
+            pst2pdf/dist/pst2pdf-gui-macos-x86_64
+            pst2pdf/dist/pst2pdf-gui-macos-universal
           if-no-files-found: error
 
   # ── Release (runs only when all selected builds complete) ─────────────
@@ -169,13 +229,18 @@ jobs:
             --title "pst2pdf $TAG" \
             --notes "Automated build from workflow dispatch.
 
-          | Binary | Platform |
-          |--------|----------|
-          | \`pst2pdf-linux-x86_64\` | Linux x86_64 |
-          | \`pst2pdf-windows-x86_64.exe\` | Windows x86_64 |
-          | \`pst2pdf-macos-arm64\` | macOS Apple Silicon |
-          | \`pst2pdf-macos-x86_64\` | macOS Intel |
-          | \`pst2pdf-macos-universal\` | macOS Universal (both) |
+          | Binary | Platform | Type |
+          |--------|----------|------|
+          | \`pst2pdf-linux-x86_64\` | Linux x86_64 | CLI |
+          | \`pst2pdf-gui-linux-x86_64\` | Linux x86_64 | GUI |
+          | \`pst2pdf-windows-x86_64.exe\` | Windows x86_64 | CLI |
+          | \`pst2pdf-gui-windows-x86_64.exe\` | Windows x86_64 | GUI |
+          | \`pst2pdf-macos-arm64\` | macOS Apple Silicon | CLI |
+          | \`pst2pdf-gui-macos-arm64\` | macOS Apple Silicon | GUI |
+          | \`pst2pdf-macos-x86_64\` | macOS Intel | CLI |
+          | \`pst2pdf-gui-macos-x86_64\` | macOS Intel | GUI |
+          | \`pst2pdf-macos-universal\` | macOS Universal (both) | CLI |
+          | \`pst2pdf-gui-macos-universal\` | macOS Universal (both) | GUI |
 
           See [README](README.md) for usage instructions." \
             --prerelease

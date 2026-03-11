@@ -1,0 +1,5 @@
+libpff-python
+reportlab
+html2text
+pypdf
+customtkinter
