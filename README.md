@@ -4,52 +4,90 @@
 
 Converts a PST file (Outlook mailbox) to one PDF per email. Built for e-discovery workflows — supports sequential Bates stamping burned directly onto each page and an optional manifest CSV index.
 
-### Requirements
+### Download
 
-- Python 3.10+
-- `libpff` — PST parsing native library
-  - Ubuntu/Debian: `sudo apt install libpff-dev`
-  - Windows/macOS: installed automatically via the `libpff-python` wheel (`pip install libpff-python`)
-- Python packages: `pip install -r pst2pdf/requirements.txt`
+Pre-built standalone binaries are available on the [Releases](../../releases) page
 
-### Usage
+| Platform | GUI | CLI |
+|---|---|---|
+| Windows | `pst2pdf-gui.exe` | `pst2pdf.exe` |
+| Linux | `pst2pdf-gui` | `pst2pdf` |
+| macOS | `pst2pdf-gui` | `pst2pdf` |
 
-```bash
-cd pst2pdf
-
-# Basic conversion
-python pst2pdf.py evidence.pst ./output/
-
-# With Bates stamping burned onto every page + manifest index
-python pst2pdf.py evidence.pst ./output/ --bates --prefix SMITH --manifest
-
-# Continue a prior production starting at page 500
-python pst2pdf.py evidence2.pst ./output/ --bates --prefix SMITH --start-num 500 --manifest
-
-# Extract attachments as separate files alongside PDFs
-python pst2pdf.py evidence.pst ./output/ --attachments extract
-
-# Email bodies only, no attachments, merge everything into one PDF
-python pst2pdf.py evidence.pst ./output/ --attachments none --merge all.pdf
-```
+---
 
 ### GUI
 
-A graphical interface is also available:
+Double-click `pst2pdf-gui` (or `pst2pdf-gui.exe` on Windows) to launch the graphical interface.
 
-```bash
-cd pst2pdf
-python gui.py
-```
+1. Click **Browse** next to **PST File** and select your `.pst` file
+2. The **Output Dir** is pre-filled to an `output/` folder next to the PST — change it if needed
+3. Adjust options as required (hover any label for a tooltip explanation)
+4. Click **Convert** — progress and log output appear at the bottom
 
 The GUI provides:
 
 - **File pickers** for the PST file and output directory
-- **Basic options** — prefix, attachment mode (embed / extract / none), manifest CSV toggle, merge toggle
-- **Advanced panel** (collapsible) — start number, max attachment size, Bates stamping with pad width, deduplication toggle, non-email items toggle
-- **Real-time log** output and progress bar during conversion
+- **Filename Prefix** — text prepended to every output filename (e.g. `MSG` → `MSG_00001.pdf`)
+- **Attachments** — embed inside PDF / extract as separate files / ignore
+- **Manifest CSV** toggle and **merge-to-single-PDF** toggle
+- **Advanced panel** (collapsible) — start number, max attachment size, Bates stamping, deduplication, non-email items
 
-All options mirror the CLI flags. The conversion runs in a background thread so the UI stays responsive.
+---
+
+### CLI
+
+There is also a standalone CLI utility if you prefer to use that over the graphical utility.
+
+```bash
+# Basic conversion
+pst2pdf evidence.pst ./output/
+
+# With Bates stamping burned onto every page + manifest index, prefix each file with SMITH
+pst2pdf evidence.pst ./output/ --bates --prefix SMITH --manifest
+
+# Continue a prior production starting at item 500, prefix each file with SMITH
+pst2pdf evidence2.pst ./output/ --bates --prefix SMITH --start-num 500 --manifest
+
+# Extract attachments as separate files alongside PDFs
+pst2pdf evidence.pst ./output/ --attachments extract
+
+# Email bodies only, no attachments, merge everything into one PDF
+pst2pdf evidence.pst ./output/ --attachments none --merge all.pdf
+```
+
+On Windows the binary is `pst2pdf.exe`; on Linux/macOS you may need to mark it executable first:
+
+```bash
+chmod +x pst2pdf
+./pst2pdf evidence.pst ./output/
+```
+
+---
+
+### Running from source
+
+If you prefer to run the Python scripts directly (e.g. for development):
+
+**Requirements**
+
+- Python 3.10+
+- `libpff` native library
+  - Ubuntu/Debian: `sudo apt install libpff-dev`
+  - Windows/macOS: installed automatically via the `libpff-python` wheel
+- Python packages: `pip install -r pst2pdf/requirements.txt`
+
+```bash
+cd pst2pdf
+
+# GUI
+python gui.py
+
+# CLI
+python pst2pdf.py evidence.pst ./output/ --bates --prefix SMITH --manifest
+```
+
+---
 
 ### Options
 
@@ -66,6 +104,8 @@ All options mirror the CLI flags. The conversion runs in a background thread so 
 | `--max-attachment-size MB` | `10` | Skip embedding attachments larger than this size in MB (`embed` mode only). Use `0` to disable the limit. |
 | `--merge FILENAME` | off | After converting, merge all PDFs into one file in the output directory (e.g. `--merge all.pdf`) |
 | `--verbose` | off | Enable debug logging |
+
+---
 
 ### Output
 
@@ -84,6 +124,8 @@ All options mirror the CLI flags. The conversion runs in a background thread so 
 - `--merge all.pdf` produces a single PDF of the entire PST alongside the individual files
 - `manifest.csv` (optional) — one row per email with columns: `filename`, `date`, `from`, `to`, `cc`, `subject`, `message_id`, `folder_path`, `attachments`, and (if `--bates`) `bates_begin`, `bates_end`
 
+---
+
 ### Build standalone binaries
 
 ```bash
@@ -96,7 +138,7 @@ pst2pdf\build.bat         # → pst2pdf\dist\pst2pdf.exe      (CLI)
                           # → pst2pdf\dist\pst2pdf-gui.exe  (GUI)
 ```
 
-Requires PyInstaller (`pip install pyinstaller`). Both binaries include all dependencies and can be run without a Python installation. The GUI binary uses `--windowed` so no console window appears on macOS/Windows.
+Requires PyInstaller (`pip install pyinstaller`). Both binaries bundle all dependencies and run without a Python installation. The GUI binary uses `--windowed` so no console window appears on macOS/Windows.
 
 Test data shamelessly stolen from: 
 https://github.com/aspose-email/Aspose.Email-Python-Dotnet/tree/c564549cfb3b3b1e3d1275dbc1fd01aa5696df35/Examples/Data

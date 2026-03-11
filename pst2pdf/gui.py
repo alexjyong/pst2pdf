@@ -8,6 +8,7 @@ import queue
 import threading
 from pathlib import Path
 
+import tkinter as tk
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 
@@ -21,6 +22,49 @@ ctk.set_appearance_mode("system")
 ctk.set_default_color_theme("blue")
 
 _LOG_QUEUE: queue.Queue = queue.Queue()
+
+
+class Tooltip:
+    """Hover tooltip for any tkinter/CustomTkinter widget."""
+
+    def __init__(self, widget, text: str, delay: int = 500):
+        self._widget = widget
+        self._text = text
+        self._delay = delay
+        self._tip: tk.Toplevel | None = None
+        self._after_id: str | None = None
+        widget.bind("<Enter>", self._schedule)
+        widget.bind("<Leave>", self._cancel)
+        widget.bind("<ButtonPress>", self._cancel)
+
+    def _schedule(self, _event=None):
+        self._cancel()
+        self._after_id = self._widget.after(self._delay, self._show)
+
+    def _cancel(self, _event=None):
+        if self._after_id:
+            self._widget.after_cancel(self._after_id)
+            self._after_id = None
+        self._hide()
+
+    def _show(self):
+        if self._tip:
+            return
+        x = self._widget.winfo_rootx() + 20
+        y = self._widget.winfo_rooty() + self._widget.winfo_height() + 4
+        self._tip = tw = tk.Toplevel(self._widget)
+        tw.wm_overrideredirect(True)
+        tw.wm_geometry(f"+{x}+{y}")
+        tk.Label(
+            tw, text=self._text, justify="left",
+            background="#ffffe0", relief="solid", borderwidth=1,
+            font=("TkDefaultFont", 9), wraplength=300, padx=6, pady=4,
+        ).pack()
+
+    def _hide(self):
+        if self._tip:
+            self._tip.destroy()
+            self._tip = None
 
 
 class QueueHandler(logging.Handler):
@@ -75,52 +119,69 @@ class App(ctk.CTk):
         row += 1
 
         # PST file
-        ctk.CTkLabel(basic, text="PST File").grid(row=0, column=0, padx=12, pady=8, sticky="w")
+        pst_lbl = ctk.CTkLabel(basic, text="PST File")
+        pst_lbl.grid(row=0, column=0, padx=12, pady=8, sticky="w")
+        Tooltip(pst_lbl, "The Outlook .pst mailbox file to convert to PDF.")
         self._pst_var = ctk.StringVar()
-        ctk.CTkEntry(basic, textvariable=self._pst_var, placeholder_text="Select a .pst file…").grid(
-            row=0, column=1, padx=6, pady=8, sticky="ew"
-        )
+        pst_entry = ctk.CTkEntry(basic, textvariable=self._pst_var, placeholder_text="Select a .pst file…")
+        pst_entry.grid(row=0, column=1, padx=6, pady=8, sticky="ew")
+        Tooltip(pst_entry, "The Outlook .pst mailbox file to convert to PDF.")
         ctk.CTkButton(basic, text="Browse", width=72, command=self._browse_pst).grid(
             row=0, column=2, padx=(0, 12), pady=8
         )
 
         # Output directory
-        ctk.CTkLabel(basic, text="Output Dir").grid(row=1, column=0, padx=12, pady=8, sticky="w")
+        out_lbl = ctk.CTkLabel(basic, text="Output Dir")
+        out_lbl.grid(row=1, column=0, padx=12, pady=8, sticky="w")
+        Tooltip(out_lbl, "Folder where output PDFs (and optional manifest) will be saved.\nCreated automatically if it doesn't exist.")
         self._out_var = ctk.StringVar()
-        ctk.CTkEntry(basic, textvariable=self._out_var, placeholder_text="Select output folder…").grid(
-            row=1, column=1, padx=6, pady=8, sticky="ew"
-        )
+        out_entry = ctk.CTkEntry(basic, textvariable=self._out_var, placeholder_text="Select output folder…")
+        out_entry.grid(row=1, column=1, padx=6, pady=8, sticky="ew")
+        Tooltip(out_entry, "Folder where output PDFs (and optional manifest) will be saved.\nCreated automatically if it doesn't exist.")
         ctk.CTkButton(basic, text="Browse", width=72, command=self._browse_output).grid(
             row=1, column=2, padx=(0, 12), pady=8
         )
 
-        # Prefix + Attachments side by side
-        ctk.CTkLabel(basic, text="Prefix").grid(row=2, column=0, padx=12, pady=8, sticky="w")
+        # Filename Prefix + Attachments side by side
+        prefix_lbl = ctk.CTkLabel(basic, text="Filename Prefix")
+        prefix_lbl.grid(row=2, column=0, padx=12, pady=8, sticky="w")
+        _prefix_tip = "Text prepended to every output filename (and Bates number if enabled).\nExample: 'MSG' → MSG_00001.pdf, MSG_00002.pdf, …"
+        Tooltip(prefix_lbl, _prefix_tip)
         inner = ctk.CTkFrame(basic, fg_color="transparent")
         inner.grid(row=2, column=1, columnspan=2, padx=6, pady=8, sticky="ew")
         inner.grid_columnconfigure(1, weight=1)
 
         self._prefix_var = ctk.StringVar(value="MSG")
-        ctk.CTkEntry(inner, textvariable=self._prefix_var, width=100).grid(
-            row=0, column=0, padx=(0, 16), sticky="w"
-        )
-        ctk.CTkLabel(inner, text="Attachments").grid(row=0, column=1, padx=(0, 6), sticky="e")
+        prefix_entry = ctk.CTkEntry(inner, textvariable=self._prefix_var, width=100,
+                                    placeholder_text="e.g. MSG")
+        prefix_entry.grid(row=0, column=0, padx=(0, 16), sticky="w")
+        Tooltip(prefix_entry, _prefix_tip)
+        att_lbl = ctk.CTkLabel(inner, text="Attachments")
+        att_lbl.grid(row=0, column=1, padx=(0, 6), sticky="e")
+        _att_tip = ("How to handle email attachments:\n"
+                    "  embed   – append them inside each PDF\n"
+                    "  extract – save as separate files alongside the PDF\n"
+                    "  none    – ignore attachments entirely")
+        Tooltip(att_lbl, _att_tip)
         self._att_var = ctk.StringVar(value="embed")
-        ctk.CTkOptionMenu(inner, variable=self._att_var, values=["embed", "extract", "none"],
-                          width=110).grid(row=0, column=2, padx=(0, 12), sticky="e")
+        att_menu = ctk.CTkOptionMenu(inner, variable=self._att_var, values=["embed", "extract", "none"],
+                                     width=110)
+        att_menu.grid(row=0, column=2, padx=(0, 12), sticky="e")
+        Tooltip(att_menu, _att_tip)
 
         # Manifest + Merge
         checks = ctk.CTkFrame(basic, fg_color="transparent")
         checks.grid(row=3, column=0, columnspan=3, padx=12, pady=(4, 10), sticky="ew")
 
         self._manifest_var = ctk.BooleanVar(value=True)
-        ctk.CTkCheckBox(checks, text="Write manifest.csv", variable=self._manifest_var).pack(
-            side="left", padx=(0, 20)
-        )
+        manifest_cb = ctk.CTkCheckBox(checks, text="Write manifest.csv", variable=self._manifest_var)
+        manifest_cb.pack(side="left", padx=(0, 20))
+        Tooltip(manifest_cb, "Save a CSV index of all converted emails with metadata\n(date, sender, recipients, subject, folder path, attachments).")
         self._merge_var = ctk.BooleanVar(value=False)
         merge_cb = ctk.CTkCheckBox(checks, text="Merge to:", variable=self._merge_var,
                                    command=self._toggle_merge)
         merge_cb.pack(side="left", padx=(0, 6))
+        Tooltip(merge_cb, "Combine all output PDFs into a single merged file with the given filename.")
         self._merge_name_var = ctk.StringVar(value="all.pdf")
         self._merge_entry = ctk.CTkEntry(checks, textvariable=self._merge_name_var, width=100,
                                          state="disabled")
@@ -180,40 +241,52 @@ class App(ctk.CTk):
             r += 1
 
         # Start number
-        ctk.CTkLabel(parent, text="Start Number").grid(row=r, column=0, padx=12, pady=6, sticky="w")
+        start_lbl = ctk.CTkLabel(parent, text="Start Number")
+        start_lbl.grid(row=r, column=0, padx=12, pady=6, sticky="w")
+        Tooltip(start_lbl, "Counter value for the first output file.\nExample: 5 → MSG_00005.pdf, MSG_00006.pdf, …")
         self._start_var = ctk.StringVar(value="1")
-        ctk.CTkEntry(parent, textvariable=self._start_var, width=80).grid(
-            row=r, column=1, padx=(6, 12), pady=6, sticky="w"
-        )
+        start_entry = ctk.CTkEntry(parent, textvariable=self._start_var, width=80)
+        start_entry.grid(row=r, column=1, padx=(6, 12), pady=6, sticky="w")
+        Tooltip(start_entry, "Counter value for the first output file.\nExample: 5 → MSG_00005.pdf, MSG_00006.pdf, …")
         r += 1
 
         # Max attachment size
-        ctk.CTkLabel(parent, text="Max Attachment (MB)").grid(row=r, column=0, padx=12, pady=6, sticky="w")
+        att_lbl = ctk.CTkLabel(parent, text="Max Attachment (MB)")
+        att_lbl.grid(row=r, column=0, padx=12, pady=6, sticky="w")
+        Tooltip(att_lbl, "Skip attachments larger than this size (in MB).\nSet to 0 for no limit.")
         self._max_att_var = ctk.StringVar(value="10")
-        ctk.CTkEntry(parent, textvariable=self._max_att_var, width=80).grid(
-            row=r, column=1, padx=(6, 12), pady=6, sticky="w"
-        )
+        att_entry = ctk.CTkEntry(parent, textvariable=self._max_att_var, width=80)
+        att_entry.grid(row=r, column=1, padx=(6, 12), pady=6, sticky="w")
+        Tooltip(att_entry, "Skip attachments larger than this size (in MB).\nSet to 0 for no limit.")
         r += 1
 
         # Bates stamp
         self._bates_var = ctk.BooleanVar(value=False)
         bates_row = ctk.CTkFrame(parent, fg_color="transparent")
         bates_row.grid(row=r, column=0, columnspan=2, padx=12, pady=6, sticky="w")
-        ctk.CTkCheckBox(bates_row, text="Bates stamp", variable=self._bates_var).pack(side="left", padx=(0, 16))
-        ctk.CTkLabel(bates_row, text="Pad width:").pack(side="left", padx=(0, 6))
+        bates_cb = ctk.CTkCheckBox(bates_row, text="Bates stamp", variable=self._bates_var)
+        bates_cb.pack(side="left", padx=(0, 16))
+        Tooltip(bates_cb, "Stamp sequential Bates page numbers on every PDF page.\nUsed for legal document tracking and production sets.")
+        pad_lbl = ctk.CTkLabel(bates_row, text="Pad width:")
+        pad_lbl.pack(side="left", padx=(0, 6))
+        Tooltip(pad_lbl, "Number of digits in Bates numbers.\nExample: pad 6 with prefix 'MSG' → MSG_000001, MSG_000002, …")
         self._bates_pad_var = ctk.StringVar(value="6")
-        ctk.CTkEntry(bates_row, textvariable=self._bates_pad_var, width=50).pack(side="left")
+        pad_entry = ctk.CTkEntry(bates_row, textvariable=self._bates_pad_var, width=50)
+        pad_entry.pack(side="left")
+        Tooltip(pad_entry, "Number of digits in Bates numbers.\nExample: pad 6 with prefix 'MSG' → MSG_000001, MSG_000002, …")
         r += 1
 
         # Dedup + non-email
         flags = ctk.CTkFrame(parent, fg_color="transparent")
         flags.grid(row=r, column=0, columnspan=2, padx=12, pady=(4, 10), sticky="w")
         self._nodedup_var = ctk.BooleanVar(value=False)
-        ctk.CTkCheckBox(flags, text="Disable deduplication", variable=self._nodedup_var).pack(
-            side="left", padx=(0, 20)
-        )
+        dedup_cb = ctk.CTkCheckBox(flags, text="Disable deduplication", variable=self._nodedup_var)
+        dedup_cb.pack(side="left", padx=(0, 20))
+        Tooltip(dedup_cb, "By default, emails with the same Message-ID are exported only once.\nEnable this to export all copies, including duplicates.")
         self._nonemail_var = ctk.BooleanVar(value=False)
-        ctk.CTkCheckBox(flags, text="Include non-email items", variable=self._nonemail_var).pack(side="left")
+        nonemail_cb = ctk.CTkCheckBox(flags, text="Include non-email items", variable=self._nonemail_var)
+        nonemail_cb.pack(side="left")
+        Tooltip(nonemail_cb, "Also export calendar entries, contacts, tasks, and other\nnon-email items found in the PST.")
         r += 1
 
     # ── Actions ───────────────────────────────────────────────────────────────
@@ -224,14 +297,14 @@ class App(ctk.CTk):
             filetypes=[("PST files", "*.pst"), ("All files", "*.*")],
         )
         if path:
-            self._pst_var.set(path)
+            self._pst_var.set(str(Path(path)))
             if not self._out_var.get():
                 self._out_var.set(str(Path(path).parent / "output"))
 
     def _browse_output(self):
         path = filedialog.askdirectory(title="Select output directory")
         if path:
-            self._out_var.set(path)
+            self._out_var.set(str(Path(path)))
 
     def _toggle_merge(self):
         self._merge_entry.configure(state="normal" if self._merge_var.get() else "disabled")
