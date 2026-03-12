@@ -17,6 +17,7 @@ from renderer import render_email_to_pdf
 from pypdf import PdfWriter
 from version import __version__
 import csv
+import sys, subprocess, os
 
 # ── Appearance ────────────────────────────────────────────────────────────────
 ctk.set_appearance_mode("system")
@@ -375,13 +376,13 @@ class App(ctk.CTk):
         finally:
             _LOG_QUEUE.put("__DONE__")
 
-    # ── Log polling ───────────────────────────────────────────────────────────
 
     def _poll_log(self):
         try:
             while True:
                 msg = _LOG_QUEUE.get_nowait()
                 if msg == "__DONE__":
+                    self._open_output_dir()
                     self._progress.stop()
                     self._progress.configure(mode="determinate")
                     self._progress.set(1)
@@ -393,9 +394,16 @@ class App(ctk.CTk):
         except queue.Empty:
             pass
         self.after(100, self._poll_log)
+    
+    def _open_output_dir(self):
+        path = self._out_var.get().strip()
+        if sys.platform == "win32":
+            os.startfile(path)
+        elif sys.platform == "darwin":
+            subprocess.run(["open", path])
+        else:
+            subprocess.run(["xdg-open", path])
 
-
-# ── Conversion logic (runs in worker thread) ──────────────────────────────────
 
 def _run(opts: dict):
     logger = logging.getLogger(__name__)
@@ -503,10 +511,7 @@ def _run(opts: dict):
     if deduped:
         logger.info("Deduplicated: %d skipped.", deduped)
     logger.info("Done. %d/%d converted. %d skipped.", success, success + skipped, skipped)
-
-
-# ── Entry point ───────────────────────────────────────────────────────────────
-
+    
 def main():
     _setup_logging()
     app = App()
