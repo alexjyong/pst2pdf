@@ -143,5 +143,5 @@ pst2pdf\build.bat         # → pst2pdf\dist\pst2pdf.exe      (CLI)
 
 Requires PyInstaller (`pip install pyinstaller`). Both binaries bundle all dependencies and run without a Python installation. The GUI binary uses `--windowed` so no console window appears on Windows.
 
-Test data shamelessly (:grimacing:) stolen from:
+Test data shamelessly ( :grimacing: ) stolen from:
 - https://github.com/aspose-email/Aspose.Email-Python-Dotnet/tree/c564549cfb3b3b1e3d1275dbc1fd01aa5696df35/Examples/Data
