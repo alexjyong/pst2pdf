@@ -2,11 +2,9 @@
 
 ## pst2pdf
 
-Converts a PST file (Outlook mailbox) to one PDF per email, as well as a combined PDF if desired. Built for e-discovery workflows — supports sequential Bates stamping burned directly onto each page and an optional manifest CSV index.
+Converts a PST file to one PDF per email, as well as a combined PDF if desired. Built for e-discovery workflows — supports sequential Bates stamping burned directly onto each page and an optional manifest CSV index.
 
 <img width="1570" height="887" alt="image" src="https://github.com/user-attachments/assets/9f48e105-4561-44fc-b0ce-80f0fb791b06" />
-
-
 
 ### Download
 
@@ -26,9 +24,9 @@ Double-click `pst2pdf-gui` (or `pst2pdf-gui.exe` on Windows) to launch the graph
 (Note: On Windows, you will get a prompt about unrecognized developer. This is expected at this time.)
 
 1. Click **Browse** next to **PST File** and select your `.pst` file
-2. The **Output Dir** is pre-filled to an `output/` folder next to the PST — change it if needed
+2. The **Output Dir** is pre-filled to an `output/` folder next to the PST, feel free to change it if needed
 3. Adjust options as required (hover any label for a tooltip explanation)
-4. Click **Convert** — progress and log output appear at the bottom
+4. Click **Convert** and progress and log output appear at the bottom
 
 The GUI provides:
 
@@ -145,5 +143,5 @@ pst2pdf\build.bat         # → pst2pdf\dist\pst2pdf.exe      (CLI)
 
 Requires PyInstaller (`pip install pyinstaller`). Both binaries bundle all dependencies and run without a Python installation. The GUI binary uses `--windowed` so no console window appears on Windows.
 
-Test data shamelessly stolen from: 
-https://github.com/aspose-email/Aspose.Email-Python-Dotnet/tree/c564549cfb3b3b1e3d1275dbc1fd01aa5696df35/Examples/Data
+Test data shamelessly (:grimacing:) stolen from:
+- https://github.com/aspose-email/Aspose.Email-Python-Dotnet/tree/c564549cfb3b3b1e3d1275dbc1fd01aa5696df35/Examples/Data
