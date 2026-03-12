@@ -11,13 +11,10 @@ on:
         description: "Windows (x86_64)"
         type: boolean
         default: true
-      build_macos:
-        description: "macOS (arm64 + x86_64 universal)"
-        type: boolean
-        default: true
+
 
 jobs:
-  # ── Linux ────────────────────────────────────────────────────────────────
+
   build-linux:
     if: ${{ inputs.build_linux }}
     runs-on: ubuntu-latest
@@ -38,7 +35,7 @@ jobs:
           pip install --upgrade pip
           pip install -r pst2pdf/requirements.txt pyinstaller
 
-      - name: Build binary
+      - name: Build CLI binary
         working-directory: pst2pdf
         run: |
           pyinstaller \
@@ -47,13 +44,25 @@ jobs:
             --paths . \
             pst2pdf.py
 
+      - name: Build GUI binary
+        working-directory: pst2pdf
+        run: |
+          pyinstaller \
+            --onefile \
+            --windowed \
+            --name pst2pdf-gui-linux-x86_64 \
+            --paths . \
+            --collect-data customtkinter \
+            gui.py
+
       - uses: actions/upload-artifact@v4
         with:
           name: pst2pdf-linux-x86_64
-          path: pst2pdf/dist/pst2pdf-linux-x86_64
+          path: |
+            pst2pdf/dist/pst2pdf-linux-x86_64
+            pst2pdf/dist/pst2pdf-gui-linux-x86_64
           if-no-files-found: error
 
-  # ── Windows ──────────────────────────────────────────────────────────────
   build-windows:
     if: ${{ inputs.build_windows }}
     runs-on: windows-latest
@@ -70,7 +79,7 @@ jobs:
           pip install --upgrade pip
           pip install -r pst2pdf/requirements.txt pyinstaller
 
-      - name: Build binary
+      - name: Build CLI binary
         working-directory: pst2pdf
         run: |
           pyinstaller `
@@ -79,103 +88,21 @@ jobs:
             --paths . `
             pst2pdf.py
 
+      - name: Build GUI binary
+        working-directory: pst2pdf
+        run: |
+          pyinstaller `
+            --onefile `
+            --windowed `
+            --name pst2pdf-gui-windows-x86_64 `
+            --paths . `
+            --collect-data customtkinter `
+            gui.py
+
       - uses: actions/upload-artifact@v4
         with:
           name: pst2pdf-windows-x86_64
-          path: pst2pdf/dist/pst2pdf-windows-x86_64.exe
-          if-no-files-found: error
-
-  # ── macOS ────────────────────────────────────────────────────────────────
-  build-macos:
-    if: ${{ inputs.build_macos }}
-    runs-on: macos-latest   # apple silicon (arm64) runner
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install libpff via Homebrew
-        run: |
-          brew install libyal/libyal/libpff
-
-      - name: Install Python dependencies
-        run: |
-          pip install --upgrade pip
-          pip install -r pst2pdf/requirements.txt pyinstaller
-
-      - name: Build arm64 binary
-        working-directory: pst2pdf
-        run: |
-          pyinstaller \
-            --onefile \
-            --name pst2pdf-macos-arm64 \
-            --paths . \
-            --target-arch arm64 \
-            pst2pdf.py
-
-      - name: Build x86_64 binary
-        working-directory: pst2pdf
-        run: |
-          pyinstaller \
-            --onefile \
-            --name pst2pdf-macos-x86_64 \
-            --paths . \
-            --target-arch x86_64 \
-            pst2pdf.py
-
-      - name: Create universal binary with lipo
-        working-directory: pst2pdf/dist
-        run: |
-          lipo -create -output pst2pdf-macos-universal \
-            pst2pdf-macos-arm64 \
-            pst2pdf-macos-x86_64
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: pst2pdf-macos
           path: |
-            pst2pdf/dist/pst2pdf-macos-arm64
-            pst2pdf/dist/pst2pdf-macos-x86_64
-            pst2pdf/dist/pst2pdf-macos-universal
+            pst2pdf/dist/pst2pdf-windows-x86_64.exe
+            pst2pdf/dist/pst2pdf-gui-windows-x86_64.exe
           if-no-files-found: error
-
-  # ── Release (runs only when all selected builds complete) ─────────────
-  release:
-    needs: [build-linux, build-windows, build-macos]
-    # Run even if some platform jobs were skipped (not selected)
-    if: |
-      always() &&
-      !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: dist/
-
-      - name: Create GitHub Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          TAG="build-$(date +'%Y%m%d-%H%M%S')"
-          gh release create "$TAG" dist/**/* \
-            --title "pst2pdf $TAG" \
-            --notes "Automated build from workflow dispatch.
-
-          | Binary | Platform |
-          |--------|----------|
-          | \`pst2pdf-linux-x86_64\` | Linux x86_64 |
-          | \`pst2pdf-windows-x86_64.exe\` | Windows x86_64 |
-          | \`pst2pdf-macos-arm64\` | macOS Apple Silicon |
-          | \`pst2pdf-macos-x86_64\` | macOS Intel |
-          | \`pst2pdf-macos-universal\` | macOS Universal (both) |
-
-          See [README](README.md) for usage instructions." \
-            --prerelease

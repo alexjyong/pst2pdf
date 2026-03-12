@@ -1,0 +1,20 @@
+pst2pdf/test-output/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+
+# PyInstaller
+*.spec
+pst2pdf/dist/
+pst2pdf/build/
+
+# OS
+.DS_Store
+Thumbs.db
