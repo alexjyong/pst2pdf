@@ -88,6 +88,14 @@ class App(ctk.CTk):
         super().__init__()
         self.title(f"pst2pdf {__version__}")
         self.geometry("620x700")
+
+        self.update_idletasks()
+        w = self.winfo_width()
+        h = self.winfo_height()
+        x = (self.winfo_screenwidth() // 2) - (w // 2)
+        y = (self.winfo_screenheight() // 2) - (h // 2) - 250
+        self.geometry(f"{w}x{h}+{x}+{y}")
+
         self.resizable(True, True)
         self.minsize(560, 680)
 
