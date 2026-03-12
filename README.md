@@ -16,7 +16,6 @@ Pre-built standalone binaries are available on the [Releases](../../releases) pa
 |---|---|---|
 | Windows | `pst2pdf-gui.exe` | `pst2pdf.exe` |
 | Linux | `pst2pdf-gui` | `pst2pdf` |
-| macOS | `pst2pdf-gui` | `pst2pdf` |
 
 ---
 
@@ -60,7 +59,7 @@ pst2pdf evidence.pst ./output/ --attachments extract
 pst2pdf evidence.pst ./output/ --attachments none --merge all.pdf
 ```
 
-On Windows the binary is `pst2pdf.exe`; on Linux/macOS you may need to mark it executable first:
+On Windows the binary is `pst2pdf.exe`; on Linux you may need to mark it executable first:
 
 ```bash
 chmod +x pst2pdf
@@ -78,7 +77,7 @@ If you prefer to run the Python scripts directly (e.g. for development):
 - Python 3.10+
 - `libpff` native library
   - Ubuntu/Debian: `sudo apt install libpff-dev`
-  - Windows/macOS: installed automatically via the `libpff-python` wheel
+  - Windows: installed automatically via the `libpff-python` wheel
 - Python packages: `pip install -r pst2pdf/requirements.txt`
 
 ```bash
@@ -142,7 +141,7 @@ pst2pdf\build.bat         # → pst2pdf\dist\pst2pdf.exe      (CLI)
                           # → pst2pdf\dist\pst2pdf-gui.exe  (GUI)
 ```
 
-Requires PyInstaller (`pip install pyinstaller`). Both binaries bundle all dependencies and run without a Python installation. The GUI binary uses `--windowed` so no console window appears on macOS/Windows.
+Requires PyInstaller (`pip install pyinstaller`). Both binaries bundle all dependencies and run without a Python installation. The GUI binary uses `--windowed` so no console window appears on Windows.
 
 Test data shamelessly stolen from: 
 https://github.com/aspose-email/Aspose.Email-Python-Dotnet/tree/c564549cfb3b3b1e3d1275dbc1fd01aa5696df35/Examples/Data

@@ -11,13 +11,10 @@ on:
         description: "Windows (x86_64)"
         type: boolean
         default: true
-      build_macos:
-        description: "macOS (arm64 + x86_64 universal)"
-        type: boolean
-        default: true
+
 
 jobs:
-  # ── Linux ────────────────────────────────────────────────────────────────
+
   build-linux:
     if: ${{ inputs.build_linux }}
     runs-on: ubuntu-latest
@@ -66,7 +63,6 @@ jobs:
             pst2pdf/dist/pst2pdf-gui-linux-x86_64
           if-no-files-found: error
 
-  # ── Windows ──────────────────────────────────────────────────────────────
   build-windows:
     if: ${{ inputs.build_windows }}
     runs-on: windows-latest
@@ -109,94 +105,4 @@ jobs:
           path: |
             pst2pdf/dist/pst2pdf-windows-x86_64.exe
             pst2pdf/dist/pst2pdf-gui-windows-x86_64.exe
-          if-no-files-found: error
-
-  # ── macOS ────────────────────────────────────────────────────────────────
-  build-macos:
-    if: ${{ inputs.build_macos }}
-    runs-on: macos-latest   # apple silicon (arm64) runner
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install libpff via Homebrew
-        run: |
-          brew install libyal/libyal/libpff
-
-      - name: Install Python dependencies
-        run: |
-          pip install --upgrade pip
-          pip install -r pst2pdf/requirements.txt pyinstaller
-
-      - name: Build CLI arm64 binary
-        working-directory: pst2pdf
-        run: |
-          pyinstaller \
-            --onefile \
-            --name pst2pdf-macos-arm64 \
-            --paths . \
-            --target-arch arm64 \
-            pst2pdf.py
-
-      - name: Build CLI x86_64 binary
-        working-directory: pst2pdf
-        run: |
-          pyinstaller \
-            --onefile \
-            --name pst2pdf-macos-x86_64 \
-            --paths . \
-            --target-arch x86_64 \
-            pst2pdf.py
-
-      - name: Create CLI universal binary with lipo
-        working-directory: pst2pdf/dist
-        run: |
-          lipo -create -output pst2pdf-macos-universal \
-            pst2pdf-macos-arm64 \
-            pst2pdf-macos-x86_64
-
-      - name: Build GUI arm64 binary
-        working-directory: pst2pdf
-        run: |
-          pyinstaller \
-            --onefile \
-            --windowed \
-            --name pst2pdf-gui-macos-arm64 \
-            --paths . \
-            --collect-data customtkinter \
-            --target-arch arm64 \
-            gui.py
-
-      - name: Build GUI x86_64 binary
-        working-directory: pst2pdf
-        run: |
-          pyinstaller \
-            --onefile \
-            --windowed \
-            --name pst2pdf-gui-macos-x86_64 \
-            --paths . \
-            --collect-data customtkinter \
-            --target-arch x86_64 \
-            gui.py
-
-      - name: Create GUI universal binary with lipo
-        working-directory: pst2pdf/dist
-        run: |
-          lipo -create -output pst2pdf-gui-macos-universal \
-            pst2pdf-gui-macos-arm64 \
-            pst2pdf-gui-macos-x86_64
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: pst2pdf-macos
-          path: |
-            pst2pdf/dist/pst2pdf-macos-arm64
-            pst2pdf/dist/pst2pdf-macos-x86_64
-            pst2pdf/dist/pst2pdf-macos-universal
-            pst2pdf/dist/pst2pdf-gui-macos-arm64
-            pst2pdf/dist/pst2pdf-gui-macos-x86_64
-            pst2pdf/dist/pst2pdf-gui-macos-universal
           if-no-files-found: error
