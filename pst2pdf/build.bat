@@ -2,6 +2,21 @@
 REM Build a self-contained pst2pdf.exe using PyInstaller.
 REM Run this script from the pst2pdf\ directory.
 
+python --version >nul 2>&1
+  if errorlevel 1 (
+      echo ERROR: Python not found. Please install Python from        
+  https://python.org
+      pause
+      exit /b 1
+  )
+
+pip --version >nul 2>&1
+  if errorlevel 1 (
+      echo ERROR: Pip not found. Please install Pip from https://pip.pypa.io/en/stable/installation/
+      pause
+      exit /b 1
+  )
+
 echo Installing dependencies...
 pip install -r requirements.txt pyinstaller
 
