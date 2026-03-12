@@ -2,7 +2,7 @@
 
 ## pst2pdf
 
-Converts a PST file (Outlook mailbox) to one PDF per email. Built for e-discovery workflows — supports sequential Bates stamping burned directly onto each page and an optional manifest CSV index.
+Converts a PST file (Outlook mailbox) to one PDF per email, as well as a combined PDF if desired. Built for e-discovery workflows — supports sequential Bates stamping burned directly onto each page and an optional manifest CSV index.
 
 <img width="1570" height="887" alt="image" src="https://github.com/user-attachments/assets/9f48e105-4561-44fc-b0ce-80f0fb791b06" />
 
