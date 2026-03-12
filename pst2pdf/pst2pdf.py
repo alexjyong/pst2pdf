@@ -156,7 +156,6 @@ def main() -> None:
                 embed_attachments=(args.attachments == "embed"),
             )
 
-            # Extract attachments as separate files
             if args.attachments == "extract":
                 for i, att in enumerate(email.attachments):
                     if att.is_embedded_msg or not att.data:

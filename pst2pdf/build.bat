@@ -10,7 +10,7 @@ python --version >nul 2>&1
       exit /b 1
   )
 
-pip --version >nul 2>&1
+python -m pip --version >nul 2>&1
   if errorlevel 1 (
       echo ERROR: Pip not found. Please install Pip from https://pip.pypa.io/en/stable/installation/
       pause
@@ -18,10 +18,10 @@ pip --version >nul 2>&1
   )
 
 echo Installing dependencies...
-pip install -r requirements.txt pyinstaller
+python -m pip install -r requirements.txt pyinstaller
 
 echo Building binary...
-pyinstaller ^
+python -m PyInstaller ^
   --onefile ^
   --name pst2pdf ^
   --add-data "*.py;." ^
@@ -33,7 +33,7 @@ echo Run with: dist\pst2pdf.exe input.pst output_dir\ --manifest
 
 echo.
 echo Building GUI binary...
-pyinstaller ^
+python -m PyInstaller ^
   --onefile ^
   --windowed ^
   --name pst2pdf-gui ^

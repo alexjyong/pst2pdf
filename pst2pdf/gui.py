@@ -19,7 +19,6 @@ from version import __version__
 import csv
 import sys, subprocess, os
 
-# ── Appearance ────────────────────────────────────────────────────────────────
 ctk.set_appearance_mode("system")
 ctk.set_default_color_theme("blue")
 
@@ -84,12 +83,11 @@ def _setup_logging():
     root_logger.setLevel(logging.INFO)
 
 
-# ── Main window ───────────────────────────────────────────────────────────────
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title(f"pst2pdf {__version__}")
-        self.geometry("620x780")
+        self.geometry("620x700")
         self.resizable(True, True)
         self.minsize(560, 680)
 
@@ -99,13 +97,10 @@ class App(ctk.CTk):
         self._build_ui()
         self._poll_log()
 
-    # ── UI construction ───────────────────────────────────────────────────────
-
     def _build_ui(self):
         self.grid_columnconfigure(0, weight=1)
         row = 0
 
-        # ── Title
         ctk.CTkLabel(self, text="pst2pdf", font=ctk.CTkFont(size=20, weight="bold")).grid(
             row=row, column=0, padx=20, pady=(18, 2), sticky="w"
         )
@@ -113,14 +108,16 @@ class App(ctk.CTk):
         ctk.CTkLabel(self, text="Convert PST mailboxes to PDF for e-discovery",
                      text_color="gray").grid(row=row, column=0, padx=20, pady=(0, 12), sticky="w")
         row += 1
+        row += 1
+        ctk.CTkLabel(self, text="Mouse over any label to get a tooltip explaining it",
+                     text_color="gray").grid(row=row, column=0, padx=20, pady=(0, 12), sticky="w")
+        row += 1
 
-        # ── Basic options frame
         basic = ctk.CTkFrame(self)
         basic.grid(row=row, column=0, padx=16, pady=4, sticky="ew")
         basic.grid_columnconfigure(1, weight=1)
         row += 1
 
-        # PST file
         pst_lbl = ctk.CTkLabel(basic, text="PST File")
         pst_lbl.grid(row=0, column=0, padx=12, pady=8, sticky="w")
         Tooltip(pst_lbl, "The Outlook .pst mailbox file to convert to PDF.")
@@ -132,7 +129,6 @@ class App(ctk.CTk):
             row=0, column=2, padx=(0, 12), pady=8
         )
 
-        # Output directory
         out_lbl = ctk.CTkLabel(basic, text="Output Dir")
         out_lbl.grid(row=1, column=0, padx=12, pady=8, sticky="w")
         Tooltip(out_lbl, "Folder where output PDFs (and optional manifest) will be saved.\nCreated automatically if it doesn't exist.")
@@ -144,7 +140,6 @@ class App(ctk.CTk):
             row=1, column=2, padx=(0, 12), pady=8
         )
 
-        # Filename Prefix + Attachments side by side
         prefix_lbl = ctk.CTkLabel(basic, text="Filename Prefix")
         prefix_lbl.grid(row=2, column=0, padx=12, pady=8, sticky="w")
         _prefix_tip = "Text prepended to every output filename (and Bates number if enabled).\nExample: 'MSG' → MSG_00001.pdf, MSG_00002.pdf, …"
@@ -171,7 +166,6 @@ class App(ctk.CTk):
         att_menu.grid(row=0, column=2, padx=(0, 12), sticky="e")
         Tooltip(att_menu, _att_tip)
 
-        # Manifest + Merge
         checks = ctk.CTkFrame(basic, fg_color="transparent")
         checks.grid(row=3, column=0, columnspan=3, padx=12, pady=(4, 10), sticky="ew")
 
@@ -191,7 +185,6 @@ class App(ctk.CTk):
 
         row += 1
 
-        # ── Advanced collapsible
         self._adv_open = ctk.BooleanVar(value=False)
         self._adv_btn = ctk.CTkButton(
             self, text="▶  Advanced options", fg_color="transparent",
@@ -209,7 +202,6 @@ class App(ctk.CTk):
         self._build_advanced(self._adv_frame)
         # Hidden by default — don't grid it yet
 
-        # ── Convert button
         self._convert_btn = ctk.CTkButton(
             self, text="Convert", height=40,
             font=ctk.CTkFont(size=14, weight="bold"),
@@ -218,13 +210,11 @@ class App(ctk.CTk):
         self._convert_btn.grid(row=row, column=0, padx=16, pady=12, sticky="ew")
         row += 1
 
-        # ── Progress bar
         self._progress = ctk.CTkProgressBar(self)
         self._progress.set(0)
         self._progress.grid(row=row, column=0, padx=16, pady=(0, 8), sticky="ew")
         row += 1
 
-        # ── Log output
         ctk.CTkLabel(self, text="Log", anchor="w").grid(
             row=row, column=0, padx=16, pady=(4, 0), sticky="w"
         )
@@ -242,7 +232,6 @@ class App(ctk.CTk):
             widget_fn(parent, **kw).grid(row=r, column=1, padx=(6, 12), pady=6, sticky="w")
             r += 1
 
-        # Start number
         start_lbl = ctk.CTkLabel(parent, text="Start Number")
         start_lbl.grid(row=r, column=0, padx=12, pady=6, sticky="w")
         Tooltip(start_lbl, "Counter value for the first output file.\nExample: 5 → MSG_00005.pdf, MSG_00006.pdf, …")
@@ -252,7 +241,6 @@ class App(ctk.CTk):
         Tooltip(start_entry, "Counter value for the first output file.\nExample: 5 → MSG_00005.pdf, MSG_00006.pdf, …")
         r += 1
 
-        # Max attachment size
         att_lbl = ctk.CTkLabel(parent, text="Max Attachment (MB)")
         att_lbl.grid(row=r, column=0, padx=12, pady=6, sticky="w")
         Tooltip(att_lbl, "Skip attachments larger than this size (in MB).\nSet to 0 for no limit.")
@@ -262,7 +250,6 @@ class App(ctk.CTk):
         Tooltip(att_entry, "Skip attachments larger than this size (in MB).\nSet to 0 for no limit.")
         r += 1
 
-        # Bates stamp
         self._bates_var = ctk.BooleanVar(value=False)
         bates_row = ctk.CTkFrame(parent, fg_color="transparent")
         bates_row.grid(row=r, column=0, columnspan=2, padx=12, pady=6, sticky="w")
@@ -278,7 +265,6 @@ class App(ctk.CTk):
         Tooltip(pad_entry, "Number of digits in Bates numbers.\nExample: pad 6 with prefix 'MSG' → MSG_000001, MSG_000002, …")
         r += 1
 
-        # Dedup + non-email
         flags = ctk.CTkFrame(parent, fg_color="transparent")
         flags.grid(row=r, column=0, columnspan=2, padx=12, pady=(4, 10), sticky="w")
         self._nodedup_var = ctk.BooleanVar(value=False)
@@ -290,8 +276,6 @@ class App(ctk.CTk):
         nonemail_cb.pack(side="left")
         Tooltip(nonemail_cb, "Also export calendar entries, contacts, tasks, and other\nnon-email items found in the PST.")
         r += 1
-
-    # ── Actions ───────────────────────────────────────────────────────────────
 
     def _browse_pst(self):
         path = filedialog.askopenfilename(

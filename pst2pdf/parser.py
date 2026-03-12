@@ -91,7 +91,6 @@ def _parse_attachment(attachment, index: int, max_bytes: int) -> Attachment:
 
     is_embedded = ints.get(_PR_ATTACH_METHOD) == _ATTACH_METHOD_EMBEDDED
 
-    # Determine display name
     if is_embedded:
         display = strings.get(_PR_DISPLAY_NAME, "")
         name = re.sub(r"\s*\(\d+(\.\d+)?\s*[KMG]?B\)\s*$", "", display, flags=re.IGNORECASE).strip()
@@ -110,7 +109,6 @@ def _parse_attachment(attachment, index: int, max_bytes: int) -> Attachment:
     if max_bytes == -1:
         return Attachment(name=name, size=size, data=b"", skipped=True)
 
-    # Size guard — skip reading data if it exceeds the limit
     if max_bytes > 0 and size > max_bytes:
         logger.warning(
             "Attachment '%s' is %s — exceeds limit of %s, skipping embed",

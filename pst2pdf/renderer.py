@@ -218,7 +218,6 @@ def _build_story(email: Email) -> tuple[list, list[Attachment]]:
     story.append(HRFlowable(width="100%", thickness=0.5, color=colors.grey))
     story.append(Spacer(1, 0.1 * inch))
 
-    # Email body
     for para in _get_body_text(email).split("\n"):
         para = para.strip()
         if para:
@@ -227,7 +226,6 @@ def _build_story(email: Email) -> tuple[list, list[Attachment]]:
         else:
             story.append(Spacer(1, 0.07 * inch))
 
-    # Attachments
     pdf_atts: list[Attachment] = []
     avail_w = _PAGE_W - 2 * _MARGIN
 
@@ -347,7 +345,6 @@ def render_email_to_pdf(
         doc.build(story)
         next_bates = bates_start
 
-    # Merge PDF attachments using pypdf
     if pdf_atts:
         buf.seek(0)
         writer = PdfWriter()
