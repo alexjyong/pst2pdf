@@ -4,6 +4,9 @@
 
 Converts a PST file (Outlook mailbox) to one PDF per email. Built for e-discovery workflows — supports sequential Bates stamping burned directly onto each page and an optional manifest CSV index.
 
+<img width="1383" height="903" alt="image" src="https://github.com/user-attachments/assets/2e9ef951-5e0b-4f20-8955-ed86d0ad463e" />
+
+
 ### Download
 
 Pre-built standalone binaries are available on the [Releases](../../releases) page
