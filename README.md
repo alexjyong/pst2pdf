@@ -23,6 +23,8 @@ Pre-built standalone binaries are available on the [Releases](../../releases) pa
 
 Double-click `pst2pdf-gui` (or `pst2pdf-gui.exe` on Windows) to launch the graphical interface.
 
+(Note: On Windows, you will get a prompt about unrecognized developer. This is expected at this time.)
+
 1. Click **Browse** next to **PST File** and select your `.pst` file
 2. The **Output Dir** is pre-filled to an `output/` folder next to the PST — change it if needed
 3. Adjust options as required (hover any label for a tooltip explanation)
