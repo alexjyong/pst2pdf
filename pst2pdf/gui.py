@@ -15,6 +15,7 @@ from tkinter import filedialog, messagebox
 from parser import parse_pst
 from renderer import render_email_to_pdf
 from pypdf import PdfWriter
+from version import __version__
 import csv
 
 # ── Appearance ────────────────────────────────────────────────────────────────
@@ -86,7 +87,7 @@ def _setup_logging():
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("pst2pdf")
+        self.title(f"pst2pdf {__version__}")
         self.geometry("620x780")
         self.resizable(True, True)
         self.minsize(560, 680)

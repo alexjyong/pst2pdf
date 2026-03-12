@@ -13,6 +13,7 @@ from pypdf import PdfWriter
 
 from parser import parse_pst
 from renderer import render_email_to_pdf
+from version import __version__
 
 logging.basicConfig(
     level=logging.INFO,
@@ -27,6 +28,7 @@ def main() -> None:
         prog="pst2pdf",
         description="Convert a PST file to one PDF per email (e-discovery).",
     )
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument("pst_file", help="Path to the input .pst file")
     parser.add_argument("output_dir", help="Directory to write PDF files into")
     parser.add_argument(
